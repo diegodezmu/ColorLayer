@@ -10,7 +10,7 @@ func firstLaunchSeedsFactoryPresetsAndDefaultSession() throws {
     let presets = context.store.loadPresets()
     let session = context.store.loadSession()
 
-    #expect(presets.count == 5)
+    #expect(presets.count == 4)
     #expect(presets.last?.id == FactoryPresets.neutralID)
     #expect(presets.last?.isLocked == true)
     #expect(session.activePresetID == nil)

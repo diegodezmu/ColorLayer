@@ -67,24 +67,6 @@ enum FactoryPresets {
                 ),
                 isLocked: false
             ),
-            Preset(
-                id: makeSeedID("B9B41E32-89C2-413C-8134-8A29F286E468"),
-                name: "Blanco y negro",
-                createdAt: seedDate,
-                parameters: FilterParameters(
-                    dimming: 0.1,
-                    brightness: 0,
-                    contrast: 0.2,
-                    gamma: 1.0,
-                    saturation: 0,
-                    temperature: 0,
-                    overlayHue: 0,
-                    overlaySaturation: 0,
-                    overlayBrightness: 1.0,
-                    overlayOpacity: 0
-                ),
-                isLocked: false
-            ),
             neutralPreset,
         ]
     }
