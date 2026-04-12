@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 
 struct DisplayTransferTable: Equatable {
     let red: [CGGammaValue]
@@ -28,11 +29,21 @@ struct DisplayTransferTable: Equatable {
     }
 }
 
+/// Abstraction over the Core Graphics APIs that read and write hardware transfer tables.
 protocol DisplayTransferHardware {
+    /// Restores ColorSync-managed transfer tables for the current display configuration.
     func restoreColorSyncSettings()
+
+    /// Returns the current main display identifier, or `nil` when no display can be targeted.
     func mainDisplayID() -> CGDirectDisplayID?
+
+    /// Returns the maximum number of samples supported by the display transfer table.
     func gammaTableCapacity(for displayID: CGDirectDisplayID) -> UInt32
+
+    /// Captures the current transfer table for the given display so it can be restored later.
     func currentTransferTable(for displayID: CGDirectDisplayID) -> DisplayTransferTable?
+
+    /// Applies the provided transfer table to the target display.
     @discardableResult
     func setTransferTable(_ table: DisplayTransferTable, for displayID: CGDirectDisplayID) -> Bool
 }
@@ -196,10 +207,28 @@ struct DisplayTransferTableBuilder {
     }
 }
 
+enum DisplayEffectRecovery {
+    @discardableResult
+    static func recoverIfNeeded(
+        userDefaults: UserDefaults = .standard,
+        hardware: any DisplayTransferHardware = CoreGraphicsDisplayTransferHardware()
+    ) -> Bool {
+        guard userDefaults.bool(forKey: AppDefaultsKey.effectActive) else {
+            return false
+        }
+
+        AppLog.display.info("Detected a dirty shutdown with an active display effect. Restoring ColorSync settings before startup.")
+        hardware.restoreColorSyncSettings()
+        userDefaults.set(false, forKey: AppDefaultsKey.effectActive)
+        return true
+    }
+}
+
 @MainActor
 final class DisplayTransferController {
     private let hardware: any DisplayTransferHardware
     private let tableBuilder: DisplayTransferTableBuilder
+    private let userDefaults: UserDefaults
 
     private var trackedDisplayID: CGDirectDisplayID?
     private var baselineTable: DisplayTransferTable?
@@ -207,35 +236,43 @@ final class DisplayTransferController {
 
     init(
         hardware: any DisplayTransferHardware = CoreGraphicsDisplayTransferHardware(),
-        tableBuilder: DisplayTransferTableBuilder = DisplayTransferTableBuilder()
+        tableBuilder: DisplayTransferTableBuilder = DisplayTransferTableBuilder(),
+        userDefaults: UserDefaults = .standard
     ) {
         self.hardware = hardware
         self.tableBuilder = tableBuilder
+        self.userDefaults = userDefaults
     }
 
     func sync(parameters: FilterParameters, isBypassed: Bool) {
         guard let displayID = ensureTrackedDisplay(), let baselineTable else {
+            clearEffectActiveFlag()
+            AppLog.display.debug("Skipping display transfer sync because no baseline table is available for the main display.")
             return
         }
 
         if isBypassed {
-            _ = restoreActiveDisplay()
+            restoreTrackedDisplay(reason: "the effect was bypassed")
             return
         }
 
         let table = tableBuilder.makeTable(from: parameters, baseline: baselineTable)
         guard table != baselineTable else {
-            _ = restoreActiveDisplay()
+            restoreTrackedDisplay(reason: "parameters returned to the baseline curve")
             return
         }
 
         guard hardware.setTransferTable(table, for: displayID) else {
+            AppLog.display.error("Failed to apply a display transfer table to display \(displayID, privacy: .public). Restoring ColorSync settings.")
             hardware.restoreColorSyncSettings()
             hasCustomTransferTable = false
+            clearEffectActiveFlag()
             return
         }
 
         hasCustomTransferTable = true
+        setEffectActiveFlag(true)
+        AppLog.display.info("Applied a custom display transfer table to display \(displayID, privacy: .public).")
     }
 
     func handleDisplayConfigurationChange(parameters: FilterParameters, isBypassed: Bool) {
@@ -243,10 +280,7 @@ final class DisplayTransferController {
     }
 
     func restoreSystemState() {
-        let restoredBaseline = restoreActiveDisplay()
-        if !restoredBaseline {
-            hardware.restoreColorSyncSettings()
-        }
+        restoreTrackedDisplay(reason: "restoring system state")
 
         trackedDisplayID = nil
         baselineTable = nil
@@ -268,19 +302,27 @@ final class DisplayTransferController {
             let currentDisplayID,
             let baselineTable = hardware.currentTransferTable(for: currentDisplayID)
         else {
+            if let currentDisplayID {
+                AppLog.display.error("Failed to capture the baseline transfer table for display \(currentDisplayID, privacy: .public).")
+            } else {
+                AppLog.display.debug("No main display is available to capture a baseline transfer table.")
+            }
             return nil
         }
 
         trackedDisplayID = currentDisplayID
         self.baselineTable = baselineTable
         hasCustomTransferTable = false
+        AppLog.display.debug(
+            "Captured baseline display transfer table for display \(currentDisplayID, privacy: .public) with \(baselineTable.sampleCount, privacy: .public) samples."
+        )
         return currentDisplayID
     }
 
     private func resetTrackedDisplay() {
-        let restoredBaseline = restoreActiveDisplay()
-        if !restoredBaseline, trackedDisplayID != nil {
-            hardware.restoreColorSyncSettings()
+        restoreTrackedDisplay(reason: "switching to a new main display", fallbackToColorSyncIfUntracked: false)
+        if trackedDisplayID != nil {
+            AppLog.display.debug("Resetting tracked display transfer state.")
         }
 
         trackedDisplayID = nil
@@ -304,5 +346,43 @@ final class DisplayTransferController {
         }
 
         return didRestore
+    }
+
+    private func restoreTrackedDisplay(reason: String, fallbackToColorSyncIfUntracked: Bool = true) {
+        let hadCustomTransferTable = hasCustomTransferTable
+        let displayID = trackedDisplayID
+        let restoredBaseline = restoreActiveDisplay()
+
+        if restoredBaseline {
+            if hadCustomTransferTable, let displayID {
+                AppLog.display.info(
+                    "Restored the baseline display transfer table for display \(displayID, privacy: .public) while \(reason, privacy: .public)."
+                )
+            }
+            clearEffectActiveFlag()
+            return
+        }
+
+        if displayID != nil {
+            AppLog.display.error("Failed to restore the tracked display transfer table while \(reason, privacy: .public). Falling back to ColorSync settings.")
+        } else if !fallbackToColorSyncIfUntracked {
+            clearEffectActiveFlag()
+            return
+        }
+        hardware.restoreColorSyncSettings()
+        clearEffectActiveFlag()
+    }
+
+    private func setEffectActiveFlag(_ isActive: Bool) {
+        guard userDefaults.bool(forKey: AppDefaultsKey.effectActive) != isActive else {
+            return
+        }
+
+        userDefaults.set(isActive, forKey: AppDefaultsKey.effectActive)
+        AppLog.display.debug("Updated dirty-shutdown display flag to \(isActive, privacy: .public).")
+    }
+
+    private func clearEffectActiveFlag() {
+        setEffectActiveFlag(false)
     }
 }

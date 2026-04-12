@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarPanelView: View {
     @ObservedObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.showPresetEditorAction) private var showPresetEditorAction
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -34,7 +35,7 @@ struct MenuBarPanelView: View {
                 .font(.headline)
             Spacer()
             Button {
-                AppDelegate.shared?.showPresetEditor()
+                showPresetEditorAction()
                 dismiss()
             } label: {
                 Image(systemName: "slider.horizontal.3")
@@ -68,5 +69,16 @@ struct MenuBarPanelView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct ShowPresetEditorActionKey: EnvironmentKey {
+    static let defaultValue: () -> Void = {}
+}
+
+extension EnvironmentValues {
+    var showPresetEditorAction: () -> Void {
+        get { self[ShowPresetEditorActionKey.self] }
+        set { self[ShowPresetEditorActionKey.self] = newValue }
     }
 }

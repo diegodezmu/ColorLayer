@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import Testing
 @testable import ColorLayer
 
@@ -129,6 +130,41 @@ func controllerRestoresPreviousDisplayBeforeCapturingNewMainDisplay() {
     #expect(hardware.currentTransferTableRequests[2] == 1)
     #expect(hardware.setOperations.map(\.displayID) == [1, 1, 2])
     #expect(hardware.setOperations[1].table == hardware.baselines[1])
+}
+
+@MainActor
+@Test
+func controllerTracksDirtyShutdownFlagWhileCustomTransferTableIsActive() {
+    let suiteName = "ColorLayerTests.DisplayTransferController.\(UUID().uuidString)"
+    let userDefaults = UserDefaults(suiteName: suiteName)!
+    defer { userDefaults.removePersistentDomain(forName: suiteName) }
+
+    let hardware = FakeDisplayTransferHardware()
+    let controller = DisplayTransferController(hardware: hardware, userDefaults: userDefaults)
+    var parameters = FilterParameters.neutral
+    parameters.gamma = 1.4
+
+    controller.sync(parameters: parameters, isBypassed: false)
+    #expect(userDefaults.bool(forKey: AppDefaultsKey.effectActive) == true)
+
+    controller.sync(parameters: parameters, isBypassed: true)
+    #expect(userDefaults.bool(forKey: AppDefaultsKey.effectActive) == false)
+}
+
+@Test
+func dirtyShutdownRecoveryRestoresColorSyncAndClearsTheFlag() {
+    let suiteName = "ColorLayerTests.DisplayRecovery.\(UUID().uuidString)"
+    let userDefaults = UserDefaults(suiteName: suiteName)!
+    defer { userDefaults.removePersistentDomain(forName: suiteName) }
+
+    let hardware = FakeDisplayTransferHardware()
+    userDefaults.set(true, forKey: AppDefaultsKey.effectActive)
+
+    let didRecover = DisplayEffectRecovery.recoverIfNeeded(userDefaults: userDefaults, hardware: hardware)
+
+    #expect(didRecover == true)
+    #expect(hardware.restoreColorSyncCallCount == 1)
+    #expect(userDefaults.bool(forKey: AppDefaultsKey.effectActive) == false)
 }
 
 private func isMonotonic(_ values: [CGGammaValue]) -> Bool {

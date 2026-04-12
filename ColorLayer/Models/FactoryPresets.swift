@@ -1,7 +1,7 @@
 import Foundation
 
 enum FactoryPresets {
-    static let neutralID = UUID(uuidString: "8F2F64E7-1E6B-4A43-B2C4-9C177E8E6F21")!
+    static let neutralID = makeSeedID("8F2F64E7-1E6B-4A43-B2C4-9C177E8E6F21")
 
     static let neutralPreset = Preset(
         id: neutralID,
@@ -14,7 +14,7 @@ enum FactoryPresets {
     static var seedLibrary: [Preset] {
         [
             Preset(
-                id: UUID(uuidString: "A6F2C0D1-4E3F-4A2C-8C29-4A71548A74AF")!,
+                id: makeSeedID("A6F2C0D1-4E3F-4A2C-8C29-4A71548A74AF"),
                 name: "Noche",
                 createdAt: seedDate,
                 parameters: FilterParameters(
@@ -32,7 +32,7 @@ enum FactoryPresets {
                 isLocked: false
             ),
             Preset(
-                id: UUID(uuidString: "7D0A2FA4-6880-4B61-A8F2-A602E8F6AC8B")!,
+                id: makeSeedID("7D0A2FA4-6880-4B61-A8F2-A602E8F6AC8B"),
                 name: "Foco",
                 createdAt: seedDate,
                 parameters: FilterParameters(
@@ -50,7 +50,7 @@ enum FactoryPresets {
                 isLocked: false
             ),
             Preset(
-                id: UUID(uuidString: "AC7B4E59-75A1-4AC1-AE4D-E72CE9CC65A6")!,
+                id: makeSeedID("AC7B4E59-75A1-4AC1-AE4D-E72CE9CC65A6"),
                 name: "Lectura",
                 createdAt: seedDate,
                 parameters: FilterParameters(
@@ -68,7 +68,7 @@ enum FactoryPresets {
                 isLocked: false
             ),
             Preset(
-                id: UUID(uuidString: "B9B41E32-89C2-413C-8134-8A29F286E468")!,
+                id: makeSeedID("B9B41E32-89C2-413C-8134-8A29F286E468"),
                 name: "Blanco y negro",
                 createdAt: seedDate,
                 parameters: FilterParameters(
@@ -128,5 +128,13 @@ enum FactoryPresets {
         components.month = 4
         components.day = 1
         return components.date ?? .distantPast
+    }
+
+    private static func makeSeedID(_ rawValue: String) -> UUID {
+        guard let uuid = UUID(uuidString: rawValue) else {
+            preconditionFailure("Invalid factory preset UUID: \(rawValue)")
+        }
+
+        return uuid
     }
 }

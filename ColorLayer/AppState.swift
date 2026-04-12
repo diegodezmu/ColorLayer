@@ -1,5 +1,14 @@
 import Combine
 import Foundation
+import OSLog
+
+enum AppLog {
+    static let subsystem = "com.diegofernandezmunoz.ColorLayer"
+    static let lifecycle = Logger(subsystem: subsystem, category: "lifecycle")
+    static let display = Logger(subsystem: subsystem, category: "display")
+    static let persistence = Logger(subsystem: subsystem, category: "persistence")
+    static let overlay = Logger(subsystem: subsystem, category: "overlay")
+}
 
 @MainActor
 final class AppState: ObservableObject {
@@ -107,6 +116,10 @@ final class AppState: ObservableObject {
     }
 
     func setBypassed(_ bypassed: Bool) {
+        if isBypassed != bypassed {
+            AppLog.lifecycle.info("Effect \(bypassed ? "disabled" : "enabled", privacy: .public) via bypass toggle.")
+        }
+
         isBypassed = bypassed
         persistSession()
     }

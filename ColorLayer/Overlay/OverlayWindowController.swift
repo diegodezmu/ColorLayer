@@ -1,6 +1,14 @@
 import AppKit
 import Combine
 
+/*
+ Overlay and display transfer tables coexist because they solve different classes of color adjustment.
+ The original architecture attempted to use CIFilter-based `backgroundFilters`, but that approach was not
+ reliable on Apple Silicon hardware. The shipping design therefore splits additive effects into a transparent
+ overlay window (dimming and color tint) and multiplicative effects into hardware gamma ramps (brightness,
+ contrast, gamma and temperature). Saturation is intentionally out of v1 because it requires cross-channel
+ mixing rather than independent per-channel curves.
+ */
 @MainActor
 final class OverlayWindowController: NSWindowController {
     private let appState: AppState
@@ -9,7 +17,11 @@ final class OverlayWindowController: NSWindowController {
     nonisolated(unsafe) private var screenParametersObserver: NSObjectProtocol?
     private var cancellables = Set<AnyCancellable>()
 
-    init(appState: AppState, displayTransferController: DisplayTransferController = DisplayTransferController()) {
+    convenience init(appState: AppState) {
+        self.init(appState: appState, displayTransferController: DisplayTransferController())
+    }
+
+    init(appState: AppState, displayTransferController: DisplayTransferController) {
         self.appState = appState
         self.displayTransferController = displayTransferController
 
@@ -38,7 +50,7 @@ final class OverlayWindowController: NSWindowController {
         }
     }
 
-    func showOverlay() {
+    private func showOverlay() {
         guard let window else {
             return
         }
@@ -48,21 +60,24 @@ final class OverlayWindowController: NSWindowController {
         }
 
         window.orderFront(nil)
+        AppLog.overlay.debug("Ordered the overlay window to the front.")
     }
 
-    func hideOverlay() {
+    private func hideOverlay() {
         window?.orderOut(nil)
+        AppLog.overlay.debug("Ordered the overlay window out.")
     }
 
-    func apply(parameters: FilterParameters) {
+    private func apply(parameters: FilterParameters) {
         overlayView.update(with: parameters)
     }
 
-    func handleScreenParametersChange() {
+    private func handleScreenParametersChange() {
         if let frame = NSScreen.main?.frame {
             window?.setFrame(frame, display: true)
         }
 
+        AppLog.overlay.debug("Handling screen parameter changes for the overlay window and display transfer tables.")
         displayTransferController.handleDisplayConfigurationChange(
             parameters: appState.liveParameters,
             isBypassed: appState.isBypassed
