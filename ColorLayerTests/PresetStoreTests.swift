@@ -84,6 +84,21 @@ func sessionRoundTripPersistsActivePresetAndBypass() throws {
     )
 }
 
+@Test
+func savePresetsRecreatesStorageDirectoryAfterExternalDeletion() throws {
+    let context = try makePresetStoreContext()
+    defer { context.cleanup() }
+
+    _ = context.store.loadPresets()
+    try FileManager.default.removeItem(at: context.storageDirectoryURL)
+
+    context.store.savePresets(FactoryPresets.seedLibrary)
+
+    #expect(FileManager.default.fileExists(atPath: context.storageDirectoryURL.path))
+    #expect(FileManager.default.fileExists(atPath: context.presetsFileURL.path))
+    #expect(context.store.loadPresets() == FactoryPresets.seedLibrary)
+}
+
 private func makePresetStoreContext() throws -> PresetStoreContext {
     let temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true, attributes: nil)
@@ -100,9 +115,11 @@ private func makePresetStoreContext() throws -> PresetStoreContext {
     let presetsFileURL = temporaryDirectoryURL
         .appendingPathComponent("ColorLayer", isDirectory: true)
         .appendingPathComponent("presets.json")
+    let storageDirectoryURL = presetsFileURL.deletingLastPathComponent()
 
     return PresetStoreContext(
         store: store,
+        storageDirectoryURL: storageDirectoryURL,
         presetsFileURL: presetsFileURL,
         suiteName: suiteName,
         temporaryDirectoryURL: temporaryDirectoryURL
@@ -111,6 +128,7 @@ private func makePresetStoreContext() throws -> PresetStoreContext {
 
 private struct PresetStoreContext {
     let store: PresetStore
+    let storageDirectoryURL: URL
     let presetsFileURL: URL
     let suiteName: String
     let temporaryDirectoryURL: URL
