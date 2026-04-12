@@ -1,149 +1,95 @@
 # ColorLayer
 
-ColorLayer es una app de menubar para macOS que aplica ajustes de color sobre la pantalla sin icono de Dock (`LSUIElement`). El proyecto está construido con Swift 6, SwiftUI + AppKit y no usa dependencias externas.
+ColorLayer es una utilidad de menubar para macOS que aplica ajustes de color sobre la pantalla. La app combina un overlay transparente y una gamma ramp del display para ofrecer dimming, tinte y correcciones básicas de señal sin dependencias externas.
 
-## Resumen
+![ColorLayer screenshot](docs/screenshot.png)
 
-- Tipo de app: utilidad residente de menubar.
-- Plataforma objetivo: macOS 13+.
-- Bundle ID: `com.diegofernandezmunoz.ColorLayer`.
-- Estado global: `AppState.shared`, anotado con `@MainActor`.
-- Persistencia:
-  - presets en `Application Support/ColorLayer/presets.json`
-  - sesión en `UserDefaults`
+## Requisitos del sistema
 
-## Arquitectura
+- macOS 13.0 o superior
+- Apple Silicon o Intel
 
-ColorLayer separa los efectos en dos mecanismos coordinados porque no todos se pueden resolver con la misma técnica en macOS.
+## Instalación
 
-### 1. Overlay
+1. Descarga el `.dmg` desde GitHub Releases.
+2. Abre la imagen y arrastra `ColorLayer.app` a `/Applications`.
+3. Inicia la app desde `/Applications`.
 
-`OverlayWindowController` crea una `NSWindow` transparente, fullscreen, sin foco ni interacción de ratón. Dentro monta `OverlayView`, que dibuja dos `CALayer`:
+Nota: la app manipula tablas de color del display y no está sandboxed. macOS puede pedir autorización o mostrar advertencias la primera vez que se ejecute.
 
-- una capa negra para `dimming`
-- una capa de color para el tinte (`overlayHue`, `overlaySaturation`, `overlayBrightness`, `overlayOpacity`)
+## Build desde código
 
-Este pipeline es aditivo: pinta por encima del contenido del sistema, pero no procesa los píxeles de otras apps.
+### App completa
 
-### 2. Gamma ramp
+1. Clona este repositorio.
+2. Abre `ColorLayer.xcodeproj` en Xcode.
+3. Selecciona el target `ColorLayer`.
+4. Ejecuta Build & Run.
 
-`DisplayTransferController` captura la tabla base del display principal y aplica una nueva tabla con `CGSetDisplayTransferByTable`. Ese pipeline cubre:
+### Tests de dominio sin Xcode completo
 
-- `brightness`
-- `contrast`
-- `gamma`
-- `temperature`
-
-Este pipeline es multiplicativo: modifica cómo el sistema traduce los valores RGB antes de enviarlos al panel.
-
-### 3. Coordinación
-
-`AppState` publica `liveParameters` e `isBypassed`. `OverlayWindowController` observa ambos valores y, en cada cambio:
-
-1. actualiza el overlay visual
-2. sincroniza la gamma ramp del display principal
-3. muestra u oculta la ventana overlay según el bypass
-
-Al desactivar el efecto, ambos mecanismos se restauran juntos.
-
-## Por qué no se usa Core Image como pipeline principal
-
-La arquitectura original intentó resolver todos los ajustes mediante `CIFilter` aplicado a un `CALayer` transparente. En macOS con Apple Silicon ese enfoque no produjo el efecto esperado: los filtros solo procesaban los píxeles de la propia ventana overlay, no la imagen final compuesta del escritorio.
-
-Por eso la implementación actual separa:
-
-- overlay para dimming y color
-- gamma ramp para brillo, contraste, gamma y temperatura
-
-## Limitaciones actuales
-
-- La app opera sobre el display principal (`NSScreen.main` y `CGMainDisplayID()`), no sobre una malla multi-display independiente.
-- `saturation` sigue existiendo en el modelo y en presets, pero no forma parte del pipeline activo de v1. Implementarlo con curvas por canal no es correcto porque requiere mezcla entre canales.
-- `swift test` solo valida la parte incluida en `Package.swift`; la app completa se ejecuta desde el proyecto Xcode.
-
-## Estructura del repositorio
-
-```text
-ColorLayer/
-├── AppState.swift
-├── ColorLayerApp.swift
-├── DisplayTransferController.swift
-├── Models/
-│   ├── FactoryPresets.swift
-│   ├── FilterParameters.swift
-│   └── Preset.swift
-├── Overlay/
-│   ├── OverlayView.swift
-│   └── OverlayWindowController.swift
-├── Persistence/
-│   └── PresetStore.swift
-├── Resources/
-│   └── Info.plist
-└── UI/
-    ├── MenuBarPanel/
-    │   └── MenuBarPanelView.swift
-    └── PresetEditor/
-        ├── FilterParametersView.swift
-        ├── PresetEditorView.swift
-        ├── PresetEditorWindowController.swift
-        └── PresetListView.swift
-
-ColorLayerTests/
-├── AppStateTests.swift
-├── DisplayTransferControllerTests.swift
-└── PresetStoreTests.swift
-```
-
-## Componentes principales
-
-### `ColorLayerApp` y `AppDelegate`
-
-- Arrancan la app de menubar.
-- Crean el `OverlayWindowController`.
-- Abren la ventana del editor bajo demanda.
-- Restauran ColorSync al arrancar y al terminar.
-- Interceptan `SIGTERM` y `SIGINT` para restaurar el estado del sistema antes de salir.
-
-### `AppState`
-
-- Mantiene presets, preset activo, bypass y parámetros en vivo.
-- Separa edición temporal (`liveParameters`) de persistencia del preset activo.
-- Expone reglas de UI como `hasUnsavedChanges`, `canDeleteActivePreset` o `menuBarSymbolName`.
-
-### `PresetStore`
-
-- Guarda presets como JSON.
-- Guarda `activePresetID` e `isBypassed` en `UserDefaults`.
-- Repara la librería cargada para garantizar unicidad y mantener el preset bloqueado `Neutro`.
-
-### `FactoryPresets`
-
-- Semilla inicial de presets.
-- Define el preset especial `Neutro`.
-- Fuerza que el preset bloqueado quede siempre al final.
-
-## Desarrollo
-
-### Abrir y ejecutar
-
-La app completa se ejecuta desde `ColorLayer.xcodeproj` con el esquema `ColorLayer`.
-
-### Tests
-
-La suite unitaria se ejecuta con:
+La parte testeable del dominio y la persistencia puede ejecutarse con:
 
 ```bash
 swift test
 ```
 
-Los tests cubren:
+`Package.swift` existe precisamente para ese caso: compila la lógica de estado, persistencia e invariantes sin depender de la app completa de Xcode.
 
-- `AppState`
-- `PresetStore`
-- `DisplayTransferController`
+## Uso
 
-## Notas de persistencia
+- El panel del menubar permite activar o desactivar el efecto y seleccionar presets.
+- El editor de presets permite crear, duplicar, renombrar, borrar, reordenar y ajustar parámetros.
+- Al salir, la app intenta restaurar el estado original del display. Si detecta un cierre sucio en el siguiente arranque, fuerza una restauración de ColorSync antes de continuar.
 
-- Primer arranque: si no existe `presets.json`, se generan los presets semilla.
-- Compatibilidad: `FilterParameters` mantiene decodificación tolerante para `overlayBrightness`.
-- Cierre seguro: al terminar la app se intenta restaurar la tabla base del display y, si hace falta, se delega en `CGDisplayRestoreColorSyncSettings()`.
+## Estructura del proyecto
+
+```text
+ColorLayer/
+├── AppState.swift                  Estado global compartido y reglas de negocio
+├── ColorLayerApp.swift             Punto de entrada SwiftUI + AppDelegate
+├── DisplayTransferController.swift Gamma ramp vía CoreGraphics y crash recovery
+├── Models/                         Modelos de presets y parámetros visuales
+├── Overlay/                        Overlay transparente y coordinación con gamma ramp
+├── Persistence/                    Persistencia JSON + UserDefaults
+├── Resources/                      Info.plist del target app
+├── Assets.xcassets/                Recursos visuales del bundle
+└── UI/                             Menubar panel y editor de presets
+
+ColorLayerTests/
+├── AppStateTests.swift             Estado y reglas de selección/edición
+├── DisplayTransferControllerTests.swift
+│                                   Invariantes de gamma ramp y crash recovery
+└── PresetStoreTests.swift          Persistencia y compatibilidad de datos
+```
+
+## Arquitectura resumida
+
+- `OverlayWindowController` monta una `NSWindow` transparente con dos `CALayer` para `dimming` y color superpuesto.
+- `DisplayTransferController` aplica `brightness`, `contrast`, `gamma` y `temperature` mediante `CGSetDisplayTransferByTable`.
+- `AppState.shared` coordina ambas capas y sincroniza el bypass.
+- `DisplayEffectRecovery` usa el flag `colorlayer.effectActive` para restaurar el display al siguiente arranque si la app terminó de forma sucia.
+
+La explicación técnica completa está en [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Stack tecnológico
+
+- Swift 6
+- SwiftUI
+- AppKit
+- Combine
+- CoreGraphics
+- QuartzCore
+- Foundation
+- OSLog (`Logger`)
+- Apple Testing
+
+## Publicación
+
+- Versión: `1.0.0`
+- Distribución prevista: `.dmg` desde GitHub Releases
+- Code signing: `diegodezmu`
+
+## Licencia
+
+Este proyecto se distribuye bajo **MIT + Commons Clause**. Consulta [LICENSE](LICENSE).
