@@ -115,6 +115,39 @@ func controllerReappliesTableAfterBypassIsDisabled() {
 
 @MainActor
 @Test
+func controllerSkipsReapplyingAnIdenticalTransferTable() {
+    let hardware = FakeDisplayTransferHardware()
+    let controller = DisplayTransferController(hardware: hardware)
+    var parameters = FilterParameters.neutral
+    parameters.temperature = 0.6
+
+    controller.sync(parameters: parameters, isBypassed: false)
+    controller.sync(parameters: parameters, isBypassed: false)
+
+    #expect(hardware.setOperations.count == 1)
+}
+
+@MainActor
+@Test
+func controllerSkipsHardwareWritesForOverlayOnlyChanges() {
+    let hardware = FakeDisplayTransferHardware()
+    let controller = DisplayTransferController(hardware: hardware)
+    var parameters = FilterParameters.neutral
+    parameters.brightness = -0.1
+    parameters.overlayOpacity = 0.1
+
+    controller.sync(parameters: parameters, isBypassed: false)
+
+    parameters.overlayOpacity = 0.4
+    parameters.overlayHue = 0.2
+    parameters.overlaySaturation = 0.8
+    controller.sync(parameters: parameters, isBypassed: false)
+
+    #expect(hardware.setOperations.count == 1)
+}
+
+@MainActor
+@Test
 func controllerRestoresPreviousDisplayBeforeCapturingNewMainDisplay() {
     let hardware = FakeDisplayTransferHardware()
     let controller = DisplayTransferController(hardware: hardware)

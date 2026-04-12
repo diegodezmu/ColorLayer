@@ -233,6 +233,7 @@ final class DisplayTransferController {
     private var trackedDisplayID: CGDirectDisplayID?
     private var baselineTable: DisplayTransferTable?
     private var hasCustomTransferTable = false
+    private var activeTransferTable: DisplayTransferTable?
 
     init(
         hardware: any DisplayTransferHardware = CoreGraphicsDisplayTransferHardware(),
@@ -247,6 +248,7 @@ final class DisplayTransferController {
     func sync(parameters: FilterParameters, isBypassed: Bool) {
         guard let displayID = ensureTrackedDisplay(), let baselineTable else {
             clearEffectActiveFlag()
+            activeTransferTable = nil
             AppLog.display.debug("Skipping display transfer sync because no baseline table is available for the main display.")
             return
         }
@@ -262,15 +264,23 @@ final class DisplayTransferController {
             return
         }
 
+        if hasCustomTransferTable, activeTransferTable == table {
+            setEffectActiveFlag(true)
+            AppLog.display.debug("Skipping display transfer update because the computed table already matches the active hardware table.")
+            return
+        }
+
         guard hardware.setTransferTable(table, for: displayID) else {
             AppLog.display.error("Failed to apply a display transfer table to display \(displayID, privacy: .public). Restoring ColorSync settings.")
             hardware.restoreColorSyncSettings()
             hasCustomTransferTable = false
+            activeTransferTable = nil
             clearEffectActiveFlag()
             return
         }
 
         hasCustomTransferTable = true
+        activeTransferTable = table
         setEffectActiveFlag(true)
         AppLog.display.info("Applied a custom display transfer table to display \(displayID, privacy: .public).")
     }
@@ -285,6 +295,7 @@ final class DisplayTransferController {
         trackedDisplayID = nil
         baselineTable = nil
         hasCustomTransferTable = false
+        activeTransferTable = nil
     }
 
     private func ensureTrackedDisplay() -> CGDirectDisplayID? {
@@ -313,6 +324,7 @@ final class DisplayTransferController {
         trackedDisplayID = currentDisplayID
         self.baselineTable = baselineTable
         hasCustomTransferTable = false
+        activeTransferTable = nil
         AppLog.display.debug(
             "Captured baseline display transfer table for display \(currentDisplayID, privacy: .public) with \(baselineTable.sampleCount, privacy: .public) samples."
         )
@@ -328,6 +340,7 @@ final class DisplayTransferController {
         trackedDisplayID = nil
         baselineTable = nil
         hasCustomTransferTable = false
+        activeTransferTable = nil
     }
 
     @discardableResult
@@ -359,6 +372,7 @@ final class DisplayTransferController {
                     "Restored the baseline display transfer table for display \(displayID, privacy: .public) while \(reason, privacy: .public)."
                 )
             }
+            activeTransferTable = nil
             clearEffectActiveFlag()
             return
         }
@@ -366,10 +380,12 @@ final class DisplayTransferController {
         if displayID != nil {
             AppLog.display.error("Failed to restore the tracked display transfer table while \(reason, privacy: .public). Falling back to ColorSync settings.")
         } else if !fallbackToColorSyncIfUntracked {
+            activeTransferTable = nil
             clearEffectActiveFlag()
             return
         }
         hardware.restoreColorSyncSettings()
+        activeTransferTable = nil
         clearEffectActiveFlag()
     }
 
