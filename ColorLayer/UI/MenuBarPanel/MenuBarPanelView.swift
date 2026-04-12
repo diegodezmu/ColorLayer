@@ -73,11 +73,11 @@ struct MenuBarPanelView: View {
 }
 
 private struct ShowPresetEditorActionKey: EnvironmentKey {
-    static let defaultValue: () -> Void = {}
+    static let defaultValue: @MainActor @Sendable () -> Void = {}
 }
 
 extension EnvironmentValues {
-    var showPresetEditorAction: () -> Void {
+    var showPresetEditorAction: @MainActor @Sendable () -> Void {
         get { self[ShowPresetEditorActionKey.self] }
         set { self[ShowPresetEditorActionKey.self] = newValue }
     }
