@@ -19,6 +19,7 @@ La app persiste:
 
 - presets en `Application Support/ColorLayer/presets.json`
 - sesión en `UserDefaults`
+- flag de crash recovery en `UserDefaults`
 
 ## 3. Stack tecnológico
 
@@ -39,6 +40,7 @@ La app persiste:
 - `CoreGraphics`
 - `QuartzCore`
 - `Dispatch`
+- `OSLog`
 - `Testing`
 
 No se detectan dependencias de terceros.
@@ -61,6 +63,8 @@ El target SwiftPM excluye explícitamente:
 - `Assets.xcassets`
 
 Por tanto, `swift test` valida la parte de dominio, persistencia y control de gamma, pero no la app completa tal como se ejecuta desde Xcode.
+
+La divergencia es intencionada y responde a una necesidad operativa del desarrollo: poder compilar y testear la lógica del proyecto en entornos con solo Command Line Tools y sin Xcode completo.
 
 ## 4. Arquitectura general
 
@@ -88,6 +92,7 @@ AppState
 
 `AppDelegate`:
 
+- ejecuta recuperación de display por cierre sucio antes de crear la infraestructura visual
 - restaura ColorSync al arrancar
 - crea `OverlayWindowController`
 - crea `PresetEditorWindowController` bajo demanda
@@ -107,6 +112,7 @@ Responsabilidades observables:
 - separar edición temporal de persistencia
 - derivar estado de UI
 - persistir sesión y presets vía `PresetStore`
+- centralizar logging y decisiones de coordinación
 
 ### 4.4 Pipeline de efecto visual
 
@@ -158,6 +164,12 @@ La solución implementada separa el pipeline según el tipo de efecto:
 
 - overlay para dimming y color superpuesto
 - gamma ramp para ajustes multiplicativos del display
+
+### 4.6 Logging y recuperación
+
+El proyecto usa `Logger` con subsystem `com.diegofernandezmunoz.ColorLayer` y categorías para `lifecycle`, `display`, `persistence` y `overlay`.
+
+Además, existe un mecanismo de crash recovery basado en la clave `colorlayer.effectActive` en `UserDefaults`. Si la app detecta en el siguiente arranque que el efecto quedó marcado como activo, fuerza una restauración de ColorSync antes de continuar.
 
 ## 5. Estructura del repositorio
 
@@ -295,6 +307,7 @@ Claves observadas en `UserDefaults`:
 
 - `colorlayer.activePresetID`
 - `colorlayer.isBypassed`
+- `colorlayer.effectActive`
 
 ## 9. Limitaciones y fronteras actuales
 
@@ -302,6 +315,7 @@ Claves observadas en `UserDefaults`:
 - `saturation` existe en `FilterParameters` y en los presets, pero no forma parte del pipeline activo visible en la implementación actual.
 - La cobertura automática se concentra en lógica no-UI; no hay tests directos para `MenuBarExtra`, ventanas AppKit ni overlay visual en ejecución real.
 - `swift test` no valida recursos ni el target app de Xcode.
+- La concentración de responsabilidades en `AppState` es deuda técnica conocida y aceptada.
 
 La ausencia de `saturation` en el pipeline es coherente con la arquitectura actual: una saturación real requiere mezcla entre canales, algo que no puede resolverse correctamente solo con curvas RGB independientes.
 
