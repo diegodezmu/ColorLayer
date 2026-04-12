@@ -1,0 +1,22 @@
+# Auto detect text files and normalise line endings
+
+* text=auto
+
+# Swift sources
+
+*.swift text diff=swift
+
+# Xcode project files
+
+*.pbxproj binary merge=union
+*.xcscheme text
+
+# Resources
+
+*.png binary
+*.jpg binary
+*.icns binary
+
+# Markdown
+
+*.md text diff=markdown
