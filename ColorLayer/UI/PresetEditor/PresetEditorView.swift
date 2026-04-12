@@ -9,9 +9,11 @@ struct PresetEditorView: View {
                 .frame(width: 220)
 
             Divider()
+                .accessibilityHidden(true)
 
             FilterParametersView(appState: appState)
         }
         .frame(width: 640, height: 480)
+        .accessibilityElement(children: .contain)
     }
 }

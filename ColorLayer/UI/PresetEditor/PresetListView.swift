@@ -14,6 +14,7 @@ struct PresetListView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
                 .padding(.bottom, 12)
+                .accessibilityAddTraits(.isHeader)
 
             List(selection: Binding(
                 get: { appState.activePresetID },
@@ -31,8 +32,11 @@ struct PresetListView: View {
                 }
             }
             .listStyle(.inset)
+            .accessibilityLabel("Preset list")
+            .accessibilityHint("Use arrow keys to browse presets and Space to activate the selected preset.")
 
             Divider()
+                .accessibilityHidden(true)
 
             HStack(spacing: 10) {
                 Button {
@@ -42,6 +46,9 @@ struct PresetListView: View {
                     Image(systemName: "plus")
                 }
                 .help("Crear preset")
+                .focusable()
+                .accessibilityLabel("Create preset")
+                .accessibilityHint("Creates a new editable preset.")
 
                 Button {
                     guard let activePresetID = appState.activePresetID else {
@@ -54,6 +61,9 @@ struct PresetListView: View {
                 }
                 .disabled(!appState.canDeleteActivePreset)
                 .help("Eliminar preset")
+                .focusable()
+                .accessibilityLabel("Delete preset")
+                .accessibilityHint("Deletes the selected preset.")
 
                 Spacer()
             }
@@ -72,10 +82,14 @@ struct PresetListView: View {
             TextField("Nombre", text: $draftName, onCommit: commitRename)
                 .textFieldStyle(.plain)
                 .focused($focusedPresetID, equals: preset.id)
+                .accessibilityLabel("Preset name")
+                .accessibilityValue(draftName)
                 .onAppear {
                     focusedPresetID = preset.id
                 }
         } else {
+            let isActive = appState.activePresetID == preset.id
+
             Button {
                 appState.selectPreset(preset.id)
             } label: {
@@ -87,19 +101,24 @@ struct PresetListView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-                .contextMenu {
-                    Button("Renombrar") {
-                        beginRenaming(presetID: preset.id)
-                    }
-                    .disabled(preset.isLocked)
-
-                    Button("Duplicar") {
-                        if let duplicatedPresetID = appState.duplicatePreset(id: preset.id) {
-                            beginRenaming(presetID: duplicatedPresetID)
-                        }
-                    }
-                    .disabled(preset.isLocked)
+            .accessibilityLabel("Preset \(preset.name)")
+            .accessibilityValue(presetAccessibilityValue(isActive: isActive, isLocked: preset.isLocked))
+            .accessibilityHint("Selects this preset.")
+            .contextMenu {
+                Button("Renombrar") {
+                    beginRenaming(presetID: preset.id)
                 }
+                .disabled(preset.isLocked)
+                .accessibilityLabel("Rename preset")
+
+                Button("Duplicar") {
+                    if let duplicatedPresetID = appState.duplicatePreset(id: preset.id) {
+                        beginRenaming(presetID: duplicatedPresetID)
+                    }
+                }
+                .disabled(preset.isLocked)
+                .accessibilityLabel("Duplicate preset")
+            }
         }
     }
 
@@ -123,5 +142,18 @@ struct PresetListView: View {
         appState.renamePreset(id: renamingPresetID, to: draftName)
         self.renamingPresetID = nil
         focusedPresetID = nil
+    }
+
+    private func presetAccessibilityValue(isActive: Bool, isLocked: Bool) -> String {
+        switch (isActive, isLocked) {
+        case (true, true):
+            return "Selected, locked"
+        case (true, false):
+            return "Selected"
+        case (false, true):
+            return "Locked"
+        case (false, false):
+            return "Not selected"
+        }
     }
 }
