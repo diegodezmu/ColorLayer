@@ -1,9 +1,16 @@
+# SwiftPM
 .build/
 .swiftpm/
-DerivedData/
-.DS_Store
 
+# Xcode local build output
+build/
+DerivedData/
+
+# Xcode user-specific state
 *.xcuserstate
 xcuserdata/
 *.xccheckout
 *.xcscmblueprint
+
+# macOS filesystem metadata
+.DS_Store
