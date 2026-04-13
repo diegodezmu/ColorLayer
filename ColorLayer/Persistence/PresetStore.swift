@@ -9,6 +9,7 @@ enum AppDefaultsKey {
     static let activePresetID = "colorlayer.activePresetID"
     static let isBypassed = "colorlayer.isBypassed"
     static let effectActive = "colorlayer.effectActive"
+    static let launchAtLogin = "colorlayer.launchAtLogin"
 }
 
 /// Persists the preset library and lightweight session state used to restore the menubar UI.

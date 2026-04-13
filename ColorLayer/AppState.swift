@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import OSLog
+import ServiceManagement
 
 enum AppLog {
     static let subsystem = "com.diegofernandezmunoz.ColorLayer"
@@ -18,6 +19,7 @@ final class AppState: ObservableObject {
     @Published var activePresetID: UUID?
     @Published var isBypassed: Bool
     @Published var liveParameters: FilterParameters
+    @Published private(set) var launchAtLoginEnabled: Bool
 
     var hasUnsavedChanges: Bool {
         guard let activePreset else {
@@ -72,9 +74,17 @@ final class AppState: ObservableObject {
     }
 
     private let store: any PresetStoring
+    private let userDefaults: UserDefaults
+    private let launchAtLoginController: any LaunchAtLoginControlling
 
-    init(store: any PresetStoring) {
+    init(
+        store: any PresetStoring,
+        userDefaults: UserDefaults = .standard,
+        launchAtLoginController: any LaunchAtLoginControlling = MainAppLaunchAtLoginController()
+    ) {
         self.store = store
+        self.userDefaults = userDefaults
+        self.launchAtLoginController = launchAtLoginController
 
         let loadedPresets = FactoryPresets.repairedLibrary(from: store.loadPresets())
         let session = store.loadSession()
@@ -89,6 +99,9 @@ final class AppState: ObservableObject {
             activePresetID = nil
             liveParameters = .neutral
         }
+
+        launchAtLoginEnabled = launchAtLoginController.status == .enabled
+        persistLaunchAtLoginPreference(launchAtLoginEnabled)
 
         if activePresetID != session.activePresetID {
             persistSession()
@@ -122,6 +135,31 @@ final class AppState: ObservableObject {
 
         isBypassed = bypassed
         persistSession()
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        guard launchAtLoginEnabled != enabled else {
+            refreshLaunchAtLoginStatus()
+            return
+        }
+
+        do {
+            if enabled {
+                try launchAtLoginController.register()
+            } else {
+                try launchAtLoginController.unregister()
+            }
+        } catch {
+            AppLog.lifecycle.error("Failed to update launch at login state: \(error.localizedDescription, privacy: .public)")
+        }
+
+        refreshLaunchAtLoginStatus()
+    }
+
+    func refreshLaunchAtLoginStatus() {
+        let isEnabled = launchAtLoginController.status == .enabled
+        launchAtLoginEnabled = isEnabled
+        persistLaunchAtLoginPreference(isEnabled)
     }
 
     @discardableResult
@@ -265,6 +303,30 @@ final class AppState: ObservableObject {
 
     private func persistSession() {
         store.saveSession(activePresetID: activePresetID, isBypassed: isBypassed)
+    }
+
+    private func persistLaunchAtLoginPreference(_ enabled: Bool) {
+        userDefaults.set(enabled, forKey: AppDefaultsKey.launchAtLogin)
+    }
+}
+
+protocol LaunchAtLoginControlling {
+    var status: SMAppService.Status { get }
+    func register() throws
+    func unregister() throws
+}
+
+struct MainAppLaunchAtLoginController: LaunchAtLoginControlling {
+    var status: SMAppService.Status {
+        SMAppService.mainApp.status
+    }
+
+    func register() throws {
+        try SMAppService.mainApp.register()
+    }
+
+    func unregister() throws {
+        try SMAppService.mainApp.unregister()
     }
 }
 

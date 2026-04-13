@@ -25,6 +25,19 @@ struct MenuBarPanelView: View {
             Divider()
                 .accessibilityHidden(true)
 
+            Toggle("Abrir al iniciar sesión", isOn: Binding(
+                get: { appState.launchAtLoginEnabled },
+                set: { appState.setLaunchAtLogin($0) }
+            ))
+            .toggleStyle(.switch)
+            .focusable()
+            .accessibilityLabel("Launch at login")
+            .accessibilityValue(appState.launchAtLoginEnabled ? "On" : "Off")
+            .accessibilityHint("Automatically opens ColorLayer when you sign in to macOS.")
+
+            Divider()
+                .accessibilityHidden(true)
+
             Text("PRESETS")
                 .font(.caption)
                 .foregroundStyle(.secondary)

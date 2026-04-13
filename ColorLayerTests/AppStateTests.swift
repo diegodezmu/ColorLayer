@@ -1,4 +1,5 @@
 import Foundation
+import ServiceManagement
 import Testing
 @testable import ColorLayer
 
@@ -152,6 +153,42 @@ func hasUnsavedChangesTracksSaveAndDiscardAgainstActivePreset() {
     #expect(appState.activePreset?.parameters.temperature == 0.9)
 }
 
+@MainActor
+@Test
+func launchAtLoginInitialStateReflectsControllerAndPersistsIt() {
+    let defaults = UserDefaults(suiteName: #function)!
+    defaults.removePersistentDomain(forName: #function)
+    defaults.set(false, forKey: AppDefaultsKey.launchAtLogin)
+
+    let store = InMemoryPresetStore(presets: FactoryPresets.seedLibrary)
+    let controller = TestLaunchAtLoginController(status: .enabled)
+    let appState = AppState(store: store, userDefaults: defaults, launchAtLoginController: controller)
+
+    #expect(appState.launchAtLoginEnabled)
+    #expect(defaults.bool(forKey: AppDefaultsKey.launchAtLogin))
+}
+
+@MainActor
+@Test
+func launchAtLoginToggleRegistersAndUnregistersThroughController() {
+    let defaults = UserDefaults(suiteName: #function)!
+    defaults.removePersistentDomain(forName: #function)
+
+    let store = InMemoryPresetStore(presets: FactoryPresets.seedLibrary)
+    let controller = TestLaunchAtLoginController(status: .notRegistered)
+    let appState = AppState(store: store, userDefaults: defaults, launchAtLoginController: controller)
+
+    appState.setLaunchAtLogin(true)
+    #expect(controller.registerCallCount == 1)
+    #expect(appState.launchAtLoginEnabled)
+    #expect(defaults.bool(forKey: AppDefaultsKey.launchAtLogin))
+
+    appState.setLaunchAtLogin(false)
+    #expect(controller.unregisterCallCount == 1)
+    #expect(appState.launchAtLoginEnabled == false)
+    #expect(defaults.bool(forKey: AppDefaultsKey.launchAtLogin) == false)
+}
+
 private final class InMemoryPresetStore: PresetStoring {
     var presets: [Preset]
     var session: SessionSnapshot
@@ -179,5 +216,25 @@ private final class InMemoryPresetStore: PresetStoring {
     func saveSession(activePresetID: UUID?, isBypassed: Bool) {
         session = SessionSnapshot(activePresetID: activePresetID, isBypassed: isBypassed)
         savedSessions.append(session)
+    }
+}
+
+private final class TestLaunchAtLoginController: LaunchAtLoginControlling {
+    var status: SMAppService.Status
+    var registerCallCount = 0
+    var unregisterCallCount = 0
+
+    init(status: SMAppService.Status) {
+        self.status = status
+    }
+
+    func register() throws {
+        registerCallCount += 1
+        status = .enabled
+    }
+
+    func unregister() throws {
+        unregisterCallCount += 1
+        status = .notRegistered
     }
 }
