@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MenuBarPanelView: View {
     @ObservedObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.closeMenuBarPanelAction) private var closeMenuBarPanelAction
     @Environment(\.showPresetEditorAction) private var showPresetEditorAction
 
     var body: some View {
@@ -57,7 +57,7 @@ struct MenuBarPanelView: View {
             Spacer()
             Button {
                 showPresetEditorAction()
-                dismiss()
+                closeMenuBarPanelAction()
             } label: {
                 Image(systemName: "slider.horizontal.3")
             }
@@ -118,9 +118,18 @@ private struct ShowPresetEditorActionKey: EnvironmentKey {
     static let defaultValue: @MainActor @Sendable () -> Void = {}
 }
 
+private struct CloseMenuBarPanelActionKey: EnvironmentKey {
+    static let defaultValue: @MainActor @Sendable () -> Void = {}
+}
+
 extension EnvironmentValues {
     var showPresetEditorAction: @MainActor @Sendable () -> Void {
         get { self[ShowPresetEditorActionKey.self] }
         set { self[ShowPresetEditorActionKey.self] = newValue }
+    }
+
+    var closeMenuBarPanelAction: @MainActor @Sendable () -> Void {
+        get { self[CloseMenuBarPanelActionKey.self] }
+        set { self[CloseMenuBarPanelActionKey.self] = newValue }
     }
 }

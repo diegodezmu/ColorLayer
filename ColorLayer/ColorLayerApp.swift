@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Dispatch
 import SwiftUI
 
@@ -6,16 +7,11 @@ import SwiftUI
 @main
 struct ColorLayerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var appState = AppState.shared
 
     var body: some Scene {
-        MenuBarExtra("ColorLayer", systemImage: appState.menuBarSymbolName) {
-            MenuBarPanelView(appState: appState)
-                .environment(\.showPresetEditorAction, {
-                    appDelegate.showPresetEditor()
-                })
+        Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.window)
     }
 }
 
@@ -26,11 +22,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var overlayWindowController: OverlayWindowController?
     private var presetEditorWindowController: PresetEditorWindowController?
     private var signalTerminationHandler: SignalTerminationHandler?
+    private var menuBarController: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = DisplayEffectRecovery.recoverIfNeeded()
         AppLog.lifecycle.info("Application did finish launching.")
         overlayWindowController = OverlayWindowController(appState: appState)
+        menuBarController = MenuBarController(appState: appState, appDelegate: self)
         signalTerminationHandler = SignalTerminationHandler { [weak self] signalNumber in
             Task { @MainActor in
                 self?.handleTerminationSignal(signalNumber)
@@ -76,6 +74,155 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         default:
             return "SIGNAL"
         }
+    }
+}
+
+@MainActor
+private final class MenuBarController: NSObject {
+    private let appState: AppState
+    private weak var appDelegate: AppDelegate?
+    private let statusItem: NSStatusItem
+    private let popover = NSPopover()
+    private let contextMenu = NSMenu()
+    private var cancellables = Set<AnyCancellable>()
+
+    init(appState: AppState, appDelegate: AppDelegate) {
+        self.appState = appState
+        self.appDelegate = appDelegate
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        super.init()
+        configureStatusItem()
+        configurePopover()
+        configureContextMenu()
+        observeAppState()
+        updateStatusItemImage()
+    }
+
+    private func configureStatusItem() {
+        guard let button = statusItem.button else {
+            return
+        }
+
+        button.imagePosition = .imageOnly
+        button.toolTip = "ColorLayer"
+        button.target = self
+        button.action = #selector(handleStatusItemClick(_:))
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    private func configurePopover() {
+        popover.behavior = .transient
+        popover.contentSize = NSSize(width: 280, height: 320)
+        popover.contentViewController = NSHostingController(
+            rootView: MenuBarPanelView(appState: appState)
+                .environment(\.showPresetEditorAction, { [weak self] in
+                    self?.showPresetEditor()
+                })
+                .environment(\.closeMenuBarPanelAction, { [weak self] in
+                    self?.popover.performClose(nil)
+                })
+        )
+    }
+
+    private func configureContextMenu() {
+        let editItem = NSMenuItem(
+            title: "Edit Presets...",
+            action: #selector(editPresetsSelected),
+            keyEquivalent: ""
+        )
+        editItem.target = self
+        contextMenu.addItem(editItem)
+
+        contextMenu.addItem(.separator())
+
+        let quitItem = NSMenuItem(
+            title: "Quit ColorLayer",
+            action: #selector(quitSelected),
+            keyEquivalent: ""
+        )
+        quitItem.target = self
+        contextMenu.addItem(quitItem)
+    }
+
+    private func observeAppState() {
+        appState.$isBypassed
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updateStatusItemImage()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateStatusItemImage() {
+        guard let button = statusItem.button else {
+            return
+        }
+
+        let image = NSImage(
+            systemSymbolName: appState.menuBarSymbolName,
+            accessibilityDescription: "ColorLayer"
+        )
+        image?.isTemplate = true
+        button.image = image
+    }
+
+    @objc
+    private func handleStatusItemClick(_ sender: AnyObject?) {
+        guard let event = NSApp.currentEvent else {
+            togglePopover()
+            return
+        }
+
+        switch event.type {
+        case .rightMouseUp:
+            showContextMenu()
+        case .leftMouseUp:
+            togglePopover()
+        default:
+            break
+        }
+    }
+
+    private func togglePopover() {
+        guard let button = statusItem.button else {
+            return
+        }
+
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func showContextMenu() {
+        guard let button = statusItem.button else {
+            return
+        }
+
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+
+        statusItem.menu = contextMenu
+        button.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    private func showPresetEditor() {
+        appDelegate?.showPresetEditor()
+        popover.performClose(nil)
+    }
+
+    @objc
+    private func editPresetsSelected() {
+        showPresetEditor()
+    }
+
+    @objc
+    private func quitSelected() {
+        NSApplication.shared.terminate(nil)
     }
 }
 
