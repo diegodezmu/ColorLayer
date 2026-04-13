@@ -44,6 +44,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         signalTerminationHandler?.invalidate()
     }
 
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
     func showPresetEditor() {
         if presetEditorWindowController == nil {
             presetEditorWindowController = PresetEditorWindowController(appState: appState)
