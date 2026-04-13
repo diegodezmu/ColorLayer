@@ -89,7 +89,8 @@ private final class MenuBarController: NSObject {
     init(appState: AppState, appDelegate: AppDelegate) {
         self.appState = appState
         self.appDelegate = appDelegate
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Keep a fixed status item slot so popover anchoring does not shift when the symbol changes.
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         configureStatusItem()
         configurePopover()
