@@ -89,4 +89,31 @@ struct FilterParameters: Codable, Equatable {
         overlayBrightness: 1.0,
         overlayOpacity: 0
     )
+
+    static func resolvedOverlayHue(
+        from hue: Double,
+        saturation: Double,
+        brightness: Double,
+        previousHue: Double
+    ) -> Double {
+        guard hue.isFinite else {
+            return previousHue
+        }
+
+        guard saturation > 0.0001, brightness > 0.0001 else {
+            return previousHue
+        }
+
+        let wrappedHue = hue.truncatingRemainder(dividingBy: 1)
+
+        if wrappedHue == 0, hue > 0 {
+            return 1.0.nextDown
+        }
+
+        if wrappedHue < 0 {
+            return wrappedHue + 1
+        }
+
+        return wrappedHue
+    }
 }

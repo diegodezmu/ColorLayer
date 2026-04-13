@@ -189,6 +189,31 @@ func launchAtLoginToggleRegistersAndUnregistersThroughController() {
     #expect(defaults.bool(forKey: AppDefaultsKey.launchAtLogin) == false)
 }
 
+@Test
+func overlayHueResolutionKeepsWheelNavigableAcrossTheRedSeam() {
+    let resolvedHue = FilterParameters.resolvedOverlayHue(
+        from: 1.0,
+        saturation: 1.0,
+        brightness: 1.0,
+        previousHue: 0.92
+    )
+
+    #expect(resolvedHue < 1.0)
+    #expect(resolvedHue > 0.99)
+}
+
+@Test
+func overlayHueResolutionPreservesPreviousHueWhenColorLosesHueInformation() {
+    let resolvedHue = FilterParameters.resolvedOverlayHue(
+        from: 0.0,
+        saturation: 0.0,
+        brightness: 1.0,
+        previousHue: 0.63
+    )
+
+    #expect(resolvedHue == 0.63)
+}
+
 private final class InMemoryPresetStore: PresetStoring {
     var presets: [Preset]
     var session: SessionSnapshot

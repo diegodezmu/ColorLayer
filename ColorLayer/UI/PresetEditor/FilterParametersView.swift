@@ -160,7 +160,7 @@ struct FilterParametersView: View {
                 )
             },
             set: { newColor in
-                guard let nsColor = NSColor(newColor).usingColorSpace(.deviceRGB) else {
+                guard let nsColor = NSColor(newColor).usingColorSpace(.extendedSRGB) else {
                     return
                 }
 
@@ -170,7 +170,13 @@ struct FilterParametersView: View {
                 var alpha: CGFloat = 0
 
                 nsColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-                appState.liveParameters.overlayHue = Double(hue)
+                let previousHue = appState.liveParameters.overlayHue
+                appState.liveParameters.overlayHue = FilterParameters.resolvedOverlayHue(
+                    from: Double(hue),
+                    saturation: Double(saturation),
+                    brightness: Double(brightness),
+                    previousHue: previousHue
+                )
                 appState.liveParameters.overlaySaturation = Double(saturation)
                 appState.liveParameters.overlayBrightness = Double(brightness)
             }
