@@ -1,7 +1,7 @@
 import Foundation
 import ServiceManagement
 import Testing
-@testable import ColorLayer
+@testable import LumaVeil
 
 @MainActor
 @Test
@@ -121,10 +121,10 @@ func menuBarSymbolReflectsOnAndOffStates() {
 
     appState.activePresetID = nil
     appState.setBypassed(false)
-    #expect(appState.menuBarSymbolName == "lightspectrum.horizontal")
+    #expect(appState.menuBarSymbolName == "square.3.layers.3d.down.right")
 
     appState.setBypassed(true)
-    #expect(appState.menuBarSymbolName == "circle.bottomrighthalf.pattern.checkered")
+    #expect(appState.menuBarSymbolName == "square.3.layers.3d.down.right.slash")
 }
 
 @MainActor

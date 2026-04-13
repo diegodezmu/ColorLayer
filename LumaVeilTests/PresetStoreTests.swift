@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ColorLayer
+@testable import LumaVeil
 
 @Test
 func firstLaunchSeedsFactoryPresetsAndDefaultSession() throws {
@@ -10,9 +10,10 @@ func firstLaunchSeedsFactoryPresetsAndDefaultSession() throws {
     let presets = context.store.loadPresets()
     let session = context.store.loadSession()
 
-    #expect(presets.count == 4)
+    #expect(presets.count == 5)
     #expect(presets.last?.id == FactoryPresets.neutralID)
     #expect(presets.last?.isLocked == true)
+    #expect(presets.dropLast().map(\.name) == ["Madrugada", "Noche", "Azulado", "Aclarado"])
     #expect(session.activePresetID == nil)
     #expect(session.isBypassed == false)
     #expect(FileManager.default.fileExists(atPath: context.presetsFileURL.path))
@@ -103,7 +104,7 @@ private func makePresetStoreContext() throws -> PresetStoreContext {
     let temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true, attributes: nil)
 
-    let suiteName = "ColorLayerTests.\(UUID().uuidString)"
+    let suiteName = "LumaVeilTests.\(UUID().uuidString)"
     let userDefaults = UserDefaults(suiteName: suiteName)!
 
     let store = PresetStore(
@@ -113,7 +114,7 @@ private func makePresetStoreContext() throws -> PresetStoreContext {
     )
 
     let presetsFileURL = temporaryDirectoryURL
-        .appendingPathComponent("ColorLayer", isDirectory: true)
+        .appendingPathComponent("LumaVeil", isDirectory: true)
         .appendingPathComponent("presets.json")
     let storageDirectoryURL = presetsFileURL.deletingLastPathComponent()
 

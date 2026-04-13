@@ -1,6 +1,6 @@
-# ColorLayer 1.0.0
+# LumaVeil 1.0.0
 
-ColorLayer es una utilidad de menubar para macOS que aplica ajustes de color sobre la pantalla mediante un overlay transparente y una gamma ramp del display. Está pensada como app residente, sin icono de Dock, con foco en presets persistentes y restauración segura del estado del display.
+LumaVeil es una utilidad de menubar para macOS que aplica ajustes de color sobre la pantalla mediante un overlay transparente y una gamma ramp del display. Está pensada como app residente, sin icono de Dock, con foco en presets persistentes y restauración segura del estado del display.
 
 La versión 1.0.0 entrega la primera release pública del proyecto con la arquitectura dual ya consolidada: overlay para efectos aditivos y tablas de transferencia para ajustes multiplicativos.
 
@@ -23,7 +23,7 @@ La versión 1.0.0 entrega la primera release pública del proyecto con la arquit
 
 1. Descarga el `.dmg` de la release.
 2. Abre la imagen.
-3. Arrastra `ColorLayer.app` a `/Applications`.
+3. Arrastra `LumaVeil.app` a `/Applications`.
 4. Ejecuta la app.
 
 Nota: la app manipula tablas de color del display y no está sandboxed. macOS puede solicitar confirmación la primera vez.

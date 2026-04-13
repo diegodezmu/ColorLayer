@@ -2,23 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "ColorLayer",
+    name: "LumaVeil",
     platforms: [
         .macOS(.v13),
     ],
     products: [
         .library(
-            name: "ColorLayer",
-            targets: ["ColorLayer"]
+            name: "LumaVeil",
+            targets: ["LumaVeil"]
         ),
     ],
     targets: [
         .target(
-            name: "ColorLayer",
-            path: "ColorLayer",
+            name: "LumaVeil",
+            path: "LumaVeil",
             exclude: [
                 "Assets.xcassets",
-                "ColorLayerApp.swift",
+                "LumaVeilApp.swift",
                 "Overlay",
                 "Resources",
                 "UI",
@@ -31,9 +31,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "ColorLayerTests",
-            dependencies: ["ColorLayer"],
-            path: "ColorLayerTests"
+            name: "LumaVeilTests",
+            dependencies: ["LumaVeil"],
+            path: "LumaVeilTests"
         ),
     ]
 )

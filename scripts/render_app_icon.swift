@@ -99,8 +99,8 @@ enum RendererError: LocalizedError {
 }
 
 let arguments = CommandLine.arguments
-let symbolName = arguments.count > 1 ? arguments[1] : "lightspectrum.horizontal"
-let outputPath = arguments.count > 2 ? arguments[2] : "ColorLayer/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png"
+let symbolName = arguments.count > 1 ? arguments[1] : "square.3.layers.3d.down.right"
+let outputPath = arguments.count > 2 ? arguments[2] : "LumaVeil/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png"
 let outputURL = URL(fileURLWithPath: outputPath)
 
 try FileManager.default.createDirectory(

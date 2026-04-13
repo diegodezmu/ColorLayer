@@ -1,8 +1,8 @@
-# ColorLayer
+# LumaVeil
 
-ColorLayer es una utilidad de menubar para macOS que aplica ajustes de color sobre la pantalla. La app combina un overlay transparente y una gamma ramp del display para ofrecer dimming, tinte y correcciones básicas de señal sin dependencias externas.
+LumaVeil es una utilidad de menubar para macOS que aplica ajustes de color sobre la pantalla. La app combina un overlay transparente y una gamma ramp del display para ofrecer dimming, tinte y correcciones básicas de señal sin dependencias externas.
 
-![ColorLayer screenshot](docs/screenshot.png)
+![LumaVeil screenshot](docs/screenshot.png)
 
 ## Requisitos del sistema
 
@@ -12,7 +12,7 @@ ColorLayer es una utilidad de menubar para macOS que aplica ajustes de color sob
 ## Instalación
 
 1. Descarga el `.dmg` desde GitHub Releases.
-2. Abre la imagen y arrastra `ColorLayer.app` a `/Applications`.
+2. Abre la imagen y arrastra `LumaVeil.app` a `/Applications`.
 3. Inicia la app desde `/Applications`.
 
 Nota: la app manipula tablas de color del display y no está sandboxed. macOS puede pedir autorización o mostrar advertencias la primera vez que se ejecute.
@@ -22,8 +22,8 @@ Nota: la app manipula tablas de color del display y no está sandboxed. macOS pu
 ### App completa
 
 1. Clona este repositorio.
-2. Abre `ColorLayer.xcodeproj` en Xcode.
-3. Selecciona el target `ColorLayer`.
+2. Abre `LumaVeil.xcodeproj` en Xcode.
+3. Selecciona el target `LumaVeil`.
 4. Ejecuta Build & Run.
 
 ### Tests de dominio sin Xcode completo
@@ -45,9 +45,9 @@ swift test
 ## Estructura del proyecto
 
 ```text
-ColorLayer/
+LumaVeil/
 ├── AppState.swift                  Estado global compartido y reglas de negocio
-├── ColorLayerApp.swift             Punto de entrada SwiftUI + AppDelegate
+├── LumaVeilApp.swift             Punto de entrada SwiftUI + AppDelegate
 ├── DisplayTransferController.swift Gamma ramp vía CoreGraphics y crash recovery
 ├── Models/                         Modelos de presets y parámetros visuales
 ├── Overlay/                        Overlay transparente y coordinación con gamma ramp
@@ -56,7 +56,7 @@ ColorLayer/
 ├── Assets.xcassets/                Recursos visuales del bundle
 └── UI/                             Menubar panel y editor de presets
 
-ColorLayerTests/
+LumaVeilTests/
 ├── AppStateTests.swift             Estado y reglas de selección/edición
 ├── DisplayTransferControllerTests.swift
 │                                   Invariantes de gamma ramp y crash recovery
@@ -68,7 +68,7 @@ ColorLayerTests/
 - `OverlayWindowController` monta una `NSWindow` transparente con dos `CALayer` para `dimming` y color superpuesto.
 - `DisplayTransferController` aplica `brightness`, `contrast`, `gamma` y `temperature` mediante `CGSetDisplayTransferByTable`.
 - `AppState.shared` coordina ambas capas y sincroniza el bypass.
-- `DisplayEffectRecovery` usa el flag `colorlayer.effectActive` para restaurar el display al siguiente arranque si la app terminó de forma sucia.
+- `DisplayEffectRecovery` usa el flag `lumaveil.effectActive` para restaurar el display al siguiente arranque si la app terminó de forma sucia.
 
 La explicación técnica completa está en [ARCHITECTURE.md](ARCHITECTURE.md).
 

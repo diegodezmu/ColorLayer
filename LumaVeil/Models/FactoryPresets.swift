@@ -14,6 +14,24 @@ enum FactoryPresets {
     static var seedLibrary: [Preset] {
         [
             Preset(
+                id: makeSeedID("AC7B4E59-75A1-4AC1-AE4D-E72CE9CC65A6"),
+                name: "Madrugada",
+                createdAt: seedDate,
+                parameters: FilterParameters(
+                    dimming: 0.2,
+                    brightness: -0.05,
+                    contrast: 0,
+                    gamma: 1.1,
+                    saturation: 0.85,
+                    temperature: 0.4,
+                    overlayHue: 0.11,
+                    overlaySaturation: 0.18,
+                    overlayBrightness: 1.0,
+                    overlayOpacity: 0.08
+                ),
+                isLocked: false
+            ),
+            Preset(
                 id: makeSeedID("A6F2C0D1-4E3F-4A2C-8C29-4A71548A74AF"),
                 name: "Noche",
                 createdAt: seedDate,
@@ -33,7 +51,7 @@ enum FactoryPresets {
             ),
             Preset(
                 id: makeSeedID("7D0A2FA4-6880-4B61-A8F2-A602E8F6AC8B"),
-                name: "Foco",
+                name: "Azulado",
                 createdAt: seedDate,
                 parameters: FilterParameters(
                     dimming: 0.1,
@@ -50,20 +68,20 @@ enum FactoryPresets {
                 isLocked: false
             ),
             Preset(
-                id: makeSeedID("AC7B4E59-75A1-4AC1-AE4D-E72CE9CC65A6"),
-                name: "Lectura",
+                id: makeSeedID("D4B75661-BC1B-47A5-A325-A4D2A503FF50"),
+                name: "Aclarado",
                 createdAt: seedDate,
                 parameters: FilterParameters(
-                    dimming: 0.2,
-                    brightness: -0.05,
-                    contrast: 0,
-                    gamma: 1.1,
-                    saturation: 0.85,
-                    temperature: 0.4,
-                    overlayHue: 0.11,
-                    overlaySaturation: 0.18,
+                    dimming: 0.1,
+                    brightness: 0,
+                    contrast: 0.1,
+                    gamma: 1.0,
+                    saturation: 0.3,
+                    temperature: 0.2,
+                    overlayHue: 0,
+                    overlaySaturation: 0,
                     overlayBrightness: 1.0,
-                    overlayOpacity: 0.08
+                    overlayOpacity: 0
                 ),
                 isLocked: false
             ),

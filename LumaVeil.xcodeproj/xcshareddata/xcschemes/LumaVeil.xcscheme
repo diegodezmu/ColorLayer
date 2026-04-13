@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0A0000000000000000000060"
-               BuildableName = "ColorLayer.app"
-               BlueprintName = "ColorLayer"
-               ReferencedContainer = "container:ColorLayer.xcodeproj">
+               BuildableName = "LumaVeil.app"
+               BlueprintName = "LumaVeil"
+               ReferencedContainer = "container:LumaVeil.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0A0000000000000000000061"
-               BuildableName = "ColorLayerTests.xctest"
-               BlueprintName = "ColorLayerTests"
-               ReferencedContainer = "container:ColorLayer.xcodeproj">
+               BuildableName = "LumaVeilTests.xctest"
+               BlueprintName = "LumaVeilTests"
+               ReferencedContainer = "container:LumaVeil.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -47,9 +47,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0A0000000000000000000061"
-               BuildableName = "ColorLayerTests.xctest"
-               BlueprintName = "ColorLayerTests"
-               ReferencedContainer = "container:ColorLayer.xcodeproj">
+               BuildableName = "LumaVeilTests.xctest"
+               BlueprintName = "LumaVeilTests"
+               ReferencedContainer = "container:LumaVeil.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -57,9 +57,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0A0000000000000000000060"
-            BuildableName = "ColorLayer.app"
-            BlueprintName = "ColorLayer"
-            ReferencedContainer = "container:ColorLayer.xcodeproj">
+            BuildableName = "LumaVeil.app"
+            BlueprintName = "LumaVeil"
+            ReferencedContainer = "container:LumaVeil.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -78,9 +78,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0A0000000000000000000060"
-            BuildableName = "ColorLayer.app"
-            BlueprintName = "ColorLayer"
-            ReferencedContainer = "container:ColorLayer.xcodeproj">
+            BuildableName = "LumaVeil.app"
+            BlueprintName = "LumaVeil"
+            ReferencedContainer = "container:LumaVeil.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -95,9 +95,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0A0000000000000000000060"
-            BuildableName = "ColorLayer.app"
-            BlueprintName = "ColorLayer"
-            ReferencedContainer = "container:ColorLayer.xcodeproj">
+            BuildableName = "LumaVeil.app"
+            BlueprintName = "LumaVeil"
+            ReferencedContainer = "container:LumaVeil.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

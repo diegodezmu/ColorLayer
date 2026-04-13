@@ -6,10 +6,10 @@ struct SessionSnapshot: Equatable {
 }
 
 enum AppDefaultsKey {
-    static let activePresetID = "colorlayer.activePresetID"
-    static let isBypassed = "colorlayer.isBypassed"
-    static let effectActive = "colorlayer.effectActive"
-    static let launchAtLogin = "colorlayer.launchAtLogin"
+    static let activePresetID = "lumaveil.activePresetID"
+    static let isBypassed = "lumaveil.isBypassed"
+    static let effectActive = "lumaveil.effectActive"
+    static let launchAtLogin = "lumaveil.launchAtLogin"
 }
 
 /// Persists the preset library and lightweight session state used to restore the menubar UI.
@@ -55,7 +55,7 @@ final class PresetStore: PresetStoring {
                 .appendingPathComponent("Application Support", isDirectory: true)
         }
 
-        storageDirectoryURL = rootDirectory.appendingPathComponent("ColorLayer", isDirectory: true)
+        storageDirectoryURL = rootDirectory.appendingPathComponent("LumaVeil", isDirectory: true)
         presetsFileURL = storageDirectoryURL.appendingPathComponent("presets.json")
 
         let encoder = JSONEncoder()

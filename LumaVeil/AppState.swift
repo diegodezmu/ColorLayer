@@ -4,7 +4,7 @@ import OSLog
 import ServiceManagement
 
 enum AppLog {
-    static let subsystem = "com.diegofernandezmunoz.ColorLayer"
+    static let subsystem = "com.diegofernandezmunoz.LumaVeil"
     static let lifecycle = Logger(subsystem: subsystem, category: "lifecycle")
     static let display = Logger(subsystem: subsystem, category: "display")
     static let persistence = Logger(subsystem: subsystem, category: "persistence")
@@ -47,10 +47,10 @@ final class AppState: ObservableObject {
 
     var menuBarSymbolName: String {
         if isBypassed {
-            return "circle.bottomrighthalf.pattern.checkered"
+            return "square.3.layers.3d.down.right.slash"
         }
 
-        return "lightspectrum.horizontal"
+        return "square.3.layers.3d.down.right"
     }
 
     var isActivePresetLocked: Bool {

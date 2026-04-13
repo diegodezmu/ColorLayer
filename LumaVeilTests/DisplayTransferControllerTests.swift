@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 import Testing
-@testable import ColorLayer
+@testable import LumaVeil
 
 @Test
 func neutralParametersPreserveBaselineTable() {
@@ -168,7 +168,7 @@ func controllerRestoresPreviousDisplayBeforeCapturingNewMainDisplay() {
 @MainActor
 @Test
 func controllerTracksDirtyShutdownFlagWhileCustomTransferTableIsActive() {
-    let suiteName = "ColorLayerTests.DisplayTransferController.\(UUID().uuidString)"
+    let suiteName = "LumaVeilTests.DisplayTransferController.\(UUID().uuidString)"
     let userDefaults = UserDefaults(suiteName: suiteName)!
     defer { userDefaults.removePersistentDomain(forName: suiteName) }
 
@@ -186,7 +186,7 @@ func controllerTracksDirtyShutdownFlagWhileCustomTransferTableIsActive() {
 
 @Test
 func dirtyShutdownRecoveryRestoresColorSyncAndClearsTheFlag() {
-    let suiteName = "ColorLayerTests.DisplayRecovery.\(UUID().uuidString)"
+    let suiteName = "LumaVeilTests.DisplayRecovery.\(UUID().uuidString)"
     let userDefaults = UserDefaults(suiteName: suiteName)!
     defer { userDefaults.removePersistentDomain(forName: suiteName) }
 

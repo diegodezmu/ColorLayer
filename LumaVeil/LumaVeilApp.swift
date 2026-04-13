@@ -3,9 +3,9 @@ import Combine
 import Dispatch
 import SwiftUI
 
-/// SwiftUI entry point for the ColorLayer menubar application.
+/// SwiftUI entry point for the LumaVeil menubar application.
 @main
-struct ColorLayerApp: App {
+struct LumaVeilApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
@@ -104,7 +104,7 @@ private final class MenuBarController: NSObject {
         }
 
         button.imagePosition = .imageOnly
-        button.toolTip = "ColorLayer"
+        button.toolTip = "LumaVeil"
         button.target = self
         button.action = #selector(handleStatusItemClick(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -136,7 +136,7 @@ private final class MenuBarController: NSObject {
         contextMenu.addItem(.separator())
 
         let quitItem = NSMenuItem(
-            title: "Quit ColorLayer",
+            title: "Quit LumaVeil",
             action: #selector(quitSelected),
             keyEquivalent: ""
         )
@@ -160,7 +160,7 @@ private final class MenuBarController: NSObject {
 
         let image = NSImage(
             systemSymbolName: appState.menuBarSymbolName,
-            accessibilityDescription: "ColorLayer"
+            accessibilityDescription: "LumaVeil"
         )
         image?.isTemplate = true
         button.image = image
@@ -227,7 +227,7 @@ private final class MenuBarController: NSObject {
 }
 
 private final class SignalTerminationHandler {
-    private let queue = DispatchQueue(label: "ColorLayer.SignalTerminationHandler")
+    private let queue = DispatchQueue(label: "LumaVeil.SignalTerminationHandler")
     private let signals: [Int32]
     private var sources: [DispatchSourceSignal] = []
     private let handler: @Sendable (Int32) -> Void

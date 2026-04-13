@@ -65,14 +65,14 @@ Recommended Instruments passes:
 2. Enable the effect with a non-neutral preset or live parameters that modify hardware gamma.
 3. Quit with `Cmd+Q`.
 4. Confirm the display returns to its baseline colors immediately.
-5. In Console.app, filter by subsystem `com.diegofernandezmunoz.ColorLayer` and confirm lifecycle/display logs are present.
+5. In Console.app, filter by subsystem `com.diegofernandezmunoz.LumaVeil` and confirm lifecycle/display logs are present.
 
 ### SIGTERM
 
 1. Launch the app and enable the effect.
 2. Find the process ID:
    ```bash
-   pgrep -x ColorLayer
+   pgrep -x LumaVeil
    ```
 3. Send:
    ```bash
@@ -92,7 +92,7 @@ Recommended Instruments passes:
 
 ### SIGKILL / Dirty Shutdown Recovery
 
-`SIGKILL` cannot be intercepted. Recovery depends on `UserDefaults` key `colorlayer.effectActive` being set while a custom transfer table is active.
+`SIGKILL` cannot be intercepted. Recovery depends on `UserDefaults` key `lumaveil.effectActive` being set while a custom transfer table is active.
 
 1. Launch the app and enable the effect.
 2. Send:
@@ -109,7 +109,7 @@ Recommended Instruments passes:
 ### Corrupted `presets.json`
 
 1. Quit the app.
-2. Edit `~/Library/Application Support/ColorLayer/presets.json` and replace its contents with invalid JSON.
+2. Edit `~/Library/Application Support/LumaVeil/presets.json` and replace its contents with invalid JSON.
 3. Relaunch the app.
 4. Expected result:
    - The app does not crash.
@@ -121,7 +121,7 @@ Recommended Instruments passes:
 1. Launch the app.
 2. Delete:
    ```bash
-   rm -rf ~/Library/Application\\ Support/ColorLayer
+   rm -rf ~/Library/Application\\ Support/LumaVeil
    ```
 3. Modify and save a preset.
 4. Expected result:
@@ -151,7 +151,7 @@ Run the following with the effect active and again with bypass enabled:
 
 In Console.app, use subsystem:
 
-- `com.diegofernandezmunoz.ColorLayer`
+- `com.diegofernandezmunoz.LumaVeil`
 
 Useful categories:
 

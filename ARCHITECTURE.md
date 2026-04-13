@@ -2,19 +2,19 @@
 
 ## Objetivo
 
-Este documento describe la arquitectura técnica de `ColorLayer` tal y como está implementada en el repositorio actual. Está orientado a desarrolladores que necesiten entender el flujo principal, las decisiones de diseño y los límites conocidos del sistema.
+Este documento describe la arquitectura técnica de `LumaVeil` tal y como está implementada en el repositorio actual. Está orientado a desarrolladores que necesiten entender el flujo principal, las decisiones de diseño y los límites conocidos del sistema.
 
 ## Capas funcionales
 
 ### 1. Arranque y ciclo de vida
 
-- `ColorLayerApp.swift`
+- `LumaVeilApp.swift`
 - `AppDelegate`
 
 Responsabilidades:
 
 - arrancar la app de menubar
-- montar `MenuBarExtra`
+- montar `NSStatusItem` + `NSPopover`
 - puentear SwiftUI con AppKit
 - recuperar el display si hubo un cierre sucio previo
 - restaurar el estado del sistema al terminar
@@ -39,7 +39,7 @@ Responsabilidades:
 - leer y escribir `presets.json`
 - guardar sesión ligera en `UserDefaults`
 - mantener el preset bloqueado `Neutro`
-- exponer el flag de crash recovery `colorlayer.effectActive`
+- exponer el flag de crash recovery `lumaveil.effectActive`
 
 ### 4. Interfaz
 
@@ -68,7 +68,7 @@ Responsabilidades:
 
 ```mermaid
 flowchart TD
-    A["ColorLayerApp"] --> B["AppDelegate"]
+    A["LumaVeilApp"] --> B["AppDelegate"]
     B --> C["DisplayEffectRecovery"]
     B --> D["AppState.shared"]
     B --> E["OverlayWindowController"]
@@ -81,7 +81,7 @@ flowchart TD
 
 Flujo operativo resumido:
 
-1. `ColorLayerApp` crea el `MenuBarExtra` y delega el ciclo de vida en `AppDelegate`.
+1. `LumaVeilApp` delega el ciclo de vida en `AppDelegate`, que crea la infraestructura de `NSStatusItem` y `NSPopover`.
 2. `AppDelegate` ejecuta `DisplayEffectRecovery.recoverIfNeeded()` antes de crear la infraestructura visual.
 3. `AppState.shared` carga presets y sesión persistida.
 4. `OverlayWindowController` observa `liveParameters` e `isBypassed`.
@@ -122,7 +122,7 @@ Durante el desarrollo hubo fases en las que el entorno del agente de código sol
 
 ### Qué cubre cada uno
 
-`ColorLayer.xcodeproj`:
+`LumaVeil.xcodeproj`:
 
 - app completa
 - UI
@@ -160,7 +160,7 @@ Esto es deuda técnica conocida y aceptada. La razón para mantenerlo así en v1
 
 El mecanismo de recuperación usa `UserDefaults` con la clave:
 
-- `colorlayer.effectActive`
+- `lumaveil.effectActive`
 
 Funcionamiento:
 
@@ -175,7 +175,7 @@ Esto cubre el caso en que la app termine sin pasar por su ruta normal de restaur
 
 El proyecto usa `Logger` de Apple con subsystem:
 
-- `com.diegofernandezmunoz.ColorLayer`
+- `com.diegofernandezmunoz.LumaVeil`
 
 Categorías observadas:
 
@@ -210,7 +210,7 @@ La suite actual ejecuta 21 tests mediante el framework `Testing` de Apple.
 
 ### Lo que no cubre
 
-- `MenuBarExtra`
+- `NSStatusItem` / `NSPopover`
 - ventanas AppKit
 - rendering del overlay
 - comportamiento visual real sobre un display físico

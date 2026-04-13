@@ -33,7 +33,7 @@ struct MenuBarPanelView: View {
             .focusable()
             .accessibilityLabel("Launch at login")
             .accessibilityValue(appState.launchAtLoginEnabled ? "On" : "Off")
-            .accessibilityHint("Automatically opens ColorLayer when you sign in to macOS.")
+            .accessibilityHint("Automatically opens LumaVeil when you sign in to macOS.")
 
             Divider()
                 .accessibilityHidden(true)
@@ -52,7 +52,7 @@ struct MenuBarPanelView: View {
 
     private var header: some View {
         HStack {
-            Text("ColorLayer")
+            Text("LumaVeil")
                 .font(.headline)
             Spacer()
             Button {
