@@ -62,7 +62,7 @@ final class AppState: ObservableObject {
             return false
         }
 
-        return !activePreset.isLocked && editablePresets.count > 1
+        return canDeletePreset(id: activePreset.id)
     }
 
     var canDuplicateActivePreset: Bool {
@@ -219,10 +219,18 @@ final class AppState: ObservableObject {
         persistPresets()
     }
 
+    func canDeletePreset(id: UUID) -> Bool {
+        guard let preset = presets.first(where: { $0.id == id }) else {
+            return false
+        }
+
+        return !preset.isLocked && editablePresets.count > 1
+    }
+
     func deletePreset(id: UUID) {
         guard
             let index = presets.firstIndex(where: { $0.id == id }),
-            !presets[index].isLocked
+            canDeletePreset(id: id)
         else {
             return
         }

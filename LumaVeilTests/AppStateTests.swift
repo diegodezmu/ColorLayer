@@ -84,7 +84,14 @@ func renameDeleteAndReorderPersistWhileKeepingNeutralLast() {
     #expect(appState.presets.first?.name == "Trabajo")
 
     appState.movePresets(from: IndexSet(integer: 0), to: appState.editablePresets.count)
+    #expect(appState.editablePresets.map(\.id) == [
+        FactoryPresets.seedLibrary[1].id,
+        FactoryPresets.seedLibrary[2].id,
+        FactoryPresets.seedLibrary[3].id,
+        firstEditableID,
+    ])
     #expect(appState.presets.last?.id == FactoryPresets.neutralID)
+    #expect(store.savedPresets.last?.map(\.id) == appState.presets.map(\.id))
 
     appState.deletePreset(id: firstEditableID)
     #expect(appState.presets.first(where: { $0.id == firstEditableID }) == nil)
@@ -111,6 +118,73 @@ func lockedNeutralCannotBeRenamedDuplicatedDeletedOrMoved() {
     #expect(appState.presets.map(\.id).last == FactoryPresets.neutralID)
     #expect(appState.presets.contains(where: { $0.id == FactoryPresets.neutralID && $0.name == "Neutro" }))
     #expect(Set(appState.presets.map(\.id)) == Set(originalIDs))
+}
+
+@MainActor
+@Test
+func deletingActiveEditablePresetResetsSelectionAndPersistsNeutralState() {
+    let activePreset = FactoryPresets.seedLibrary[0]
+    let store = InMemoryPresetStore(
+        presets: FactoryPresets.seedLibrary,
+        session: SessionSnapshot(activePresetID: activePreset.id, isBypassed: false)
+    )
+    let appState = AppState(store: store)
+
+    appState.deletePreset(id: activePreset.id)
+
+    #expect(appState.activePresetID == nil)
+    #expect(appState.liveParameters == .neutral)
+    #expect(store.savedSessions.last?.activePresetID == nil)
+    #expect(appState.presets.contains(where: { $0.id == activePreset.id }) == false)
+}
+
+@MainActor
+@Test
+func deletingInactiveEditablePresetKeepsCurrentSelectionAndLiveParameters() {
+    let activePreset = FactoryPresets.seedLibrary[1]
+    let deletedPreset = FactoryPresets.seedLibrary[0]
+    let store = InMemoryPresetStore(
+        presets: FactoryPresets.seedLibrary,
+        session: SessionSnapshot(activePresetID: activePreset.id, isBypassed: false)
+    )
+    let appState = AppState(store: store)
+    let initialLiveParameters = appState.liveParameters
+
+    appState.deletePreset(id: deletedPreset.id)
+
+    #expect(appState.activePresetID == activePreset.id)
+    #expect(appState.liveParameters == initialLiveParameters)
+    #expect(store.savedSessions.last?.activePresetID == activePreset.id)
+    #expect(appState.presets.contains(where: { $0.id == deletedPreset.id }) == false)
+}
+
+@MainActor
+@Test
+func deletePresetRejectsLockedAndLastEditablePresets() {
+    let lastEditable = Preset(
+        id: UUID(),
+        name: "Solo",
+        createdAt: Date(),
+        parameters: .neutral,
+        isLocked: false
+    )
+    let store = InMemoryPresetStore(
+        presets: [lastEditable, FactoryPresets.neutralPreset],
+        session: SessionSnapshot(activePresetID: lastEditable.id, isBypassed: false)
+    )
+    let appState = AppState(store: store)
+    let originalIDs = appState.presets.map(\.id)
+
+    #expect(appState.canDeletePreset(id: FactoryPresets.neutralID) == false)
+    #expect(appState.canDeletePreset(id: lastEditable.id) == false)
+
+    appState.deletePreset(id: FactoryPresets.neutralID)
+    appState.deletePreset(id: lastEditable.id)
+
+    #expect(appState.presets.map(\.id) == originalIDs)
+    #expect(store.savedPresets.isEmpty)
+    #expect(store.savedSessions.isEmpty)
+    #expect(appState.activePresetID == lastEditable.id)
 }
 
 @MainActor
