@@ -14,6 +14,7 @@ func firstLaunchSeedsFactoryPresetsAndDefaultSession() throws {
     #expect(presets.last?.id == FactoryPresets.neutralID)
     #expect(presets.last?.isLocked == true)
     #expect(presets.dropLast().map(\.name) == ["Madrugada", "Noche", "Azulado", "Aclarado"])
+    #expect(context.store.hasStoredSession() == false)
     #expect(session.activePresetID == nil)
     #expect(session.isBypassed == false)
     #expect(FileManager.default.fileExists(atPath: context.presetsFileURL.path))
@@ -83,6 +84,7 @@ func sessionRoundTripPersistsActivePresetAndBypass() throws {
         context.store.loadSession() ==
             SessionSnapshot(activePresetID: activePresetID, isBypassed: true)
     )
+    #expect(context.store.hasStoredSession())
 }
 
 @Test

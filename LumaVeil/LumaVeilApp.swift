@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppLog.lifecycle.info("Application did finish launching.")
         overlayWindowController = OverlayWindowController(appState: appState)
         menuBarController = MenuBarController(appState: appState, appDelegate: self)
+        menuBarController?.scheduleInitialPopoverPresentation()
         signalTerminationHandler = SignalTerminationHandler { [weak self] signalNumber in
             Task { @MainActor in
                 self?.handleTerminationSignal(signalNumber)
@@ -185,16 +186,34 @@ private final class MenuBarController: NSObject {
     }
 
     private func togglePopover() {
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            showPopover()
+        }
+    }
+
+    func scheduleInitialPopoverPresentation() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.showPopoverIfNeeded()
+        }
+    }
+
+    private func showPopoverIfNeeded() {
+        guard !popover.isShown else {
+            return
+        }
+
+        showPopover()
+    }
+
+    private func showPopover() {
         guard let button = statusItem.button else {
             return
         }
 
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-        }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 
     private func showContextMenu() {

@@ -87,12 +87,16 @@ final class AppState: ObservableObject {
         self.launchAtLoginController = launchAtLoginController
 
         let loadedPresets = FactoryPresets.repairedLibrary(from: store.loadPresets())
+        let hasStoredSession = store.hasStoredSession()
         let session = store.loadSession()
 
         presets = loadedPresets
         isBypassed = session.isBypassed
 
-        if let activePresetID = session.activePresetID, let preset = loadedPresets.first(where: { $0.id == activePresetID }) {
+        if !hasStoredSession, let neutralPreset = loadedPresets.first(where: { $0.id == FactoryPresets.neutralID }) {
+            activePresetID = neutralPreset.id
+            liveParameters = neutralPreset.parameters
+        } else if let activePresetID = session.activePresetID, let preset = loadedPresets.first(where: { $0.id == activePresetID }) {
             self.activePresetID = activePresetID
             liveParameters = preset.parameters
         } else {

@@ -5,10 +5,26 @@ import Testing
 
 @MainActor
 @Test
+func firstLaunchSelectsNeutralAndPersistsDefaultSession() {
+    let store = InMemoryPresetStore(presets: FactoryPresets.seedLibrary)
+
+    let appState = AppState(store: store)
+
+    #expect(appState.activePresetID == FactoryPresets.neutralID)
+    #expect(appState.activePreset?.id == FactoryPresets.neutralID)
+    #expect(appState.liveParameters == .neutral)
+    #expect(appState.isBypassed == false)
+    #expect(store.savedSessions.last?.activePresetID == FactoryPresets.neutralID)
+    #expect(store.savedSessions.last?.isBypassed == false)
+}
+
+@MainActor
+@Test
 func invalidStoredSelectionResetsToNeutralState() {
     let store = InMemoryPresetStore(
         presets: FactoryPresets.seedLibrary,
-        session: SessionSnapshot(activePresetID: UUID(), isBypassed: false)
+        session: SessionSnapshot(activePresetID: UUID(), isBypassed: false),
+        hasStoredSession: true
     )
 
     let appState = AppState(store: store)
@@ -21,7 +37,11 @@ func invalidStoredSelectionResetsToNeutralState() {
 @MainActor
 @Test
 func createPresetSelectsItCopiesParametersAndPersistsLibrary() {
-    let store = InMemoryPresetStore(presets: FactoryPresets.seedLibrary)
+    let store = InMemoryPresetStore(
+        presets: FactoryPresets.seedLibrary,
+        session: SessionSnapshot(activePresetID: FactoryPresets.neutralID, isBypassed: false),
+        hasStoredSession: true
+    )
     let appState = AppState(store: store)
 
     let createdPresetID = appState.createPreset()
@@ -190,7 +210,11 @@ func deletePresetRejectsLockedAndLastEditablePresets() {
 @MainActor
 @Test
 func menuBarSymbolReflectsOnAndOffStates() {
-    let store = InMemoryPresetStore(presets: FactoryPresets.seedLibrary)
+    let store = InMemoryPresetStore(
+        presets: FactoryPresets.seedLibrary,
+        session: SessionSnapshot(activePresetID: FactoryPresets.neutralID, isBypassed: false),
+        hasStoredSession: true
+    )
     let appState = AppState(store: store)
 
     appState.activePresetID = nil
@@ -291,12 +315,18 @@ func overlayHueResolutionPreservesPreviousHueWhenColorLosesHueInformation() {
 private final class InMemoryPresetStore: PresetStoring {
     var presets: [Preset]
     var session: SessionSnapshot
+    var hasStoredSessionValue: Bool
     var savedPresets: [[Preset]] = []
     var savedSessions: [SessionSnapshot] = []
 
-    init(presets: [Preset], session: SessionSnapshot = SessionSnapshot(activePresetID: nil, isBypassed: false)) {
+    init(
+        presets: [Preset],
+        session: SessionSnapshot = SessionSnapshot(activePresetID: nil, isBypassed: false),
+        hasStoredSession: Bool? = nil
+    ) {
         self.presets = presets
         self.session = session
+        hasStoredSessionValue = hasStoredSession ?? (session.activePresetID != nil || session.isBypassed)
     }
 
     func loadPresets() -> [Preset] {
@@ -312,8 +342,13 @@ private final class InMemoryPresetStore: PresetStoring {
         session
     }
 
+    func hasStoredSession() -> Bool {
+        hasStoredSessionValue
+    }
+
     func saveSession(activePresetID: UUID?, isBypassed: Bool) {
         session = SessionSnapshot(activePresetID: activePresetID, isBypassed: isBypassed)
+        hasStoredSessionValue = true
         savedSessions.append(session)
     }
 }

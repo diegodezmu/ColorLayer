@@ -23,6 +23,9 @@ protocol PresetStoring {
     /// Loads the last persisted session state for the active preset and bypass toggle.
     func loadSession() -> SessionSnapshot
 
+    /// Returns whether a session has been persisted before, allowing first-launch defaults to differ.
+    func hasStoredSession() -> Bool
+
     /// Saves the lightweight session state needed to restore the active preset and bypass toggle.
     func saveSession(activePresetID: UUID?, isBypassed: Bool)
 }
@@ -123,6 +126,11 @@ final class PresetStore: PresetStoring {
             activePresetID: activePresetID,
             isBypassed: userDefaults.bool(forKey: AppDefaultsKey.isBypassed)
         )
+    }
+
+    func hasStoredSession() -> Bool {
+        userDefaults.object(forKey: AppDefaultsKey.activePresetID) != nil
+            || userDefaults.object(forKey: AppDefaultsKey.isBypassed) != nil
     }
 
     func saveSession(activePresetID: UUID?, isBypassed: Bool) {
