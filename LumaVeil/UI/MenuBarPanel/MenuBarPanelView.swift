@@ -61,9 +61,9 @@ struct MenuBarPanelView: View {
             } label: {
                 Image(systemName: "slider.horizontal.3")
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
             .help("Editar presets")
-            .focusable()
+            .focusable(false)
             .accessibilityLabel("Open preset editor")
             .accessibilityHint("Opens the preset editor window.")
         }
